@@ -119,10 +119,17 @@
             }
 
             /* Folder titles are the menu's headings: bigger, bold, taller
-               rows, so they read as sections and not as more items. */
-            .dg li.title {
-                /* background-COLOR only: the shorthand would erase the
-                   data-URI arrow that marks a folder open or closed. */
+               rows, so they read as sections and not as more items.
+
+               background-image none EVERYWHERE: dat.gui marks open/closed
+               with a data-URI arrow gif, and its higher-specificity
+               .closed rule kept re-supplying that image while our
+               background reset put it in tiling mode — the arrow tiled
+               across the whole row and garbled the four folder titles.
+               We draw our own chevron with ::before instead. */
+            .dg li.title,
+            .dg .closed li.title {
+                background-image: none !important;
                 background-color: rgba(180, 210, 235, 0.08) !important;
                 text-transform: uppercase;
                 letter-spacing: 0.10em;
@@ -131,6 +138,17 @@
                 height: 34px !important;
                 line-height: 34px !important;
                 color: rgba(210, 230, 246, 0.95);
+                padding-left: 12px !important;
+            }
+
+            .dg li.title::before {
+                content: "\25BE";   /* ▾ open */
+                margin-right: 8px;
+                color: rgba(140, 205, 255, 0.85);
+            }
+
+            .dg .closed li.title::before {
+                content: "\25B8";   /* ▸ closed */
             }
 
             /* Rows inside a folder are the sub-items: smaller, dimmer,
