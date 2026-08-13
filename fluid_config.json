@@ -1,0 +1,46 @@
+{
+  "about": "Every knob of the body-driven fluid page. landmarks = which body points paint and how; particles = how each landmark's movement becomes splats; simulation = the fluid's own per-frame dials, applied onto the sim's config. body_pointers.js refuses to run without this file. URL parameters (?vel= etc.) still override for bench tuning.",
+
+  "landmarks_doc": "index = COCO-17 position in body_state.payload.keypoints (0 nose, 1/2 eyes, 3/4 ears, 5/6 shoulders, 7/8 elbows, 9/10 wrists, 11/12 hips, 13/14 knees, 15/16 ankles). hue = fixed colour 0..1 around the wheel. force = how hard this landmark pushes the flow. dye = how much colour it deposits (kept separate from force so flow can be strong while the scene stays dim).",
+  "landmarks": [
+    { "index": 0,  "name": "nose",           "hue": 0.08, "force": 0.55, "dye": 0.16 },
+    { "index": 1,  "name": "left_eye",       "hue": 0.11, "force": 0.40, "dye": 0.12 },
+    { "index": 2,  "name": "right_eye",      "hue": 0.14, "force": 0.40, "dye": 0.12 },
+    { "index": 5,  "name": "left_shoulder",  "hue": 0.75, "force": 0.80, "dye": 0.20 },
+    { "index": 6,  "name": "right_shoulder", "hue": 0.80, "force": 0.80, "dye": 0.20 },
+    { "index": 9,  "name": "left_wrist",     "hue": 0.55, "force": 1.40, "dye": 0.34 },
+    { "index": 10, "name": "right_wrist",    "hue": 0.02, "force": 1.40, "dye": 0.34 },
+    { "index": 11, "name": "left_hip",       "hue": 0.90, "force": 0.70, "dye": 0.18 },
+    { "index": 12, "name": "right_hip",      "hue": 0.95, "force": 0.70, "dye": 0.18 }
+  ],
+
+  "particles_doc": "splat_velocity = movement to flow-push scale (2400 targets incense smoke; 9000 was a fire hose). sub_splats = particles laid along each frame's movement path. jitter = scatter around that path, texcoord units. dye_brightness = master brightness over every landmark's dye. emit_mode = trail (brush stroke) or ring (expanding puff; ring settings below apply). max_step = jump treated as a teleport, not a stroke. smoothing = per-frame approach toward the newest sample. idle_ms = no body for this long drops all pointers. min_visibility = landmark confidence floor (matches the server's own threshold).",
+  "particles": {
+    "splat_velocity": 2400,
+    "sub_splats": 3,
+    "jitter": 0.004,
+    "dye_brightness": 1.0,
+    "emit_mode": "trail",
+    "ring_count": 5,
+    "ring_radius": 0.018,
+    "ring_outward": 900,
+    "ring_spin": 0.0,
+    "max_step": 0.25,
+    "smoothing": 0.35,
+    "idle_ms": 1200,
+    "min_visibility": 0.5
+  },
+
+  "simulation_doc": "Applied onto the simulation's live config after it boots; only per-frame-safe dials belong here (resolutions are baked at startup and stay in script.js). gravity is a TouchFree addition: positive rises like smoke, negative falls like water, 0 is upstream. curl = vorticity, what makes smoke curl. splat_radius small = fine wisps. density_dissipation = how fast colour fades. velocity_dissipation = how fast motion dies (low = keeps drifting). bloom_intensity high washes the scene to white.",
+  "simulation": {
+    "GRAVITY": 7.0,
+    "CURL": 34,
+    "SPLAT_RADIUS": 0.06,
+    "SPLAT_FORCE": 4000,
+    "PRESSURE": 0.2,
+    "DENSITY_DISSIPATION": 0.7,
+    "VELOCITY_DISSIPATION": 0.08,
+    "BLOOM_INTENSITY": 0.35,
+    "BLOOM_THRESHOLD": 0.8
+  }
+}

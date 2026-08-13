@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Cache-Control" content="no-cache">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+        <title>Fluid &mdash; Body</title>
+        <meta name="description" content="TouchFree body-driven WebGL fluid — the person's landmarks stir the smoke.">
+
+        <!-- Fluid simulation: Pavel Dobryakov's WebGL-Fluid-Simulation (MIT,
+             see LICENSE). Upstream's promo material (app badges, social
+             links, analytics) is removed; the simulation itself is his.
+             Which landmarks drive it, and every particle setting, live in
+             fluid_config.json. -->
+        <script type="text/javascript" src="dat.gui.min.js"></script>
+        <style>
+            * {
+                user-select: none;
+            }
+
+            html, body {
+                overflow: hidden;
+                background-color: #000;
+            }
+
+            body {
+                margin: 0;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+            }
+
+            canvas {
+                width: 100%;
+                height: 100%;
+            }
+
+            .dg {
+                opacity: 0.9;
+            }
+
+            /* TouchFree: hide the dat.GUI settings panel — kiosk pages carry
+               no visible controls. dat.gui itself stays loaded so script.js's
+               startGUI() still runs unchanged. */
+            .dg.ac {
+                display: none !important;
+            }
+
+            /* Prompt shown until a body is tracked. Fades out the moment the
+               tracker reports one, so an occupied screen has no furniture. */
+            #bodyHint {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 8vh;
+                text-align: center;
+                pointer-events: none;
+                font-family: "Segoe UI", system-ui, sans-serif;
+                font-size: 2.2vmin;
+                letter-spacing: 0.18em;
+                text-transform: uppercase;
+                color: rgba(180, 210, 235, 0.55);
+                transition: opacity 600ms ease;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas></canvas>
+
+        <!-- Body-driven pointers. Loaded AFTER the simulation so the global
+             splat()/generateColor()/HSVtoRGB() declarations exist. Upstream
+             script.js carries only deletions of its promo material. -->
+        <div id="bodyHint">Step into view &mdash; move your arms to stir the fluid</div>
+
+        <script src="./script.js"></script>
+        <script src="./body_pointers.js"></script>
+    </body>
+</html>
