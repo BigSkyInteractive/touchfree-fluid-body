@@ -114,14 +114,31 @@
                 background: rgba(180, 210, 235, 0.05);
             }
 
+            /* Folder titles are the menu's headings: bigger, bold, taller
+               rows, so they read as sections and not as more items. */
             .dg li.title {
                 /* background-COLOR only: the shorthand would erase the
                    data-URI arrow that marks a folder open or closed. */
                 background-color: rgba(180, 210, 235, 0.08) !important;
                 text-transform: uppercase;
-                letter-spacing: 0.12em;
+                letter-spacing: 0.10em;
+                font-size: 13px !important;
+                font-weight: 700;
+                height: 34px !important;
+                line-height: 34px !important;
+                color: rgba(210, 230, 246, 0.95);
+            }
+
+            /* Rows inside a folder are the sub-items: smaller, dimmer,
+               indented under their heading. */
+            .dg .dg ul li:not(.title) .property-name,
+            .dg ul ul li:not(.title) .property-name {
                 font-size: 10px;
-                color: rgba(200, 222, 240, 0.85);
+                color: rgba(180, 210, 235, 0.58);
+            }
+
+            .dg ul ul li:not(.folder):not(.title) {
+                padding-left: 12px;
             }
 
             /* dat.gui's signature: colour-coded left borders per row type.

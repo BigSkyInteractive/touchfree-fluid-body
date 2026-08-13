@@ -304,6 +304,7 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
       refresh(gui);
       buildLandmarkFolder(gui);
       buildSettingsRows(gui);
+      gui.onResize();   // the rows above changed the panel's height
     }
     return true;
   }
@@ -316,6 +317,10 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
     window.addEventListener('keydown', function (e) {
       if (e.key === 'g' || e.key === 'G') {
         var on = document.body.classList.toggle('tf-gui');
+        // dat.gui sized itself while the panel was display:none (all
+        // offsets zero), so its scroll height is wrong until it measures
+        // the panel actually on screen — the last rows clip without this.
+        if (on && window.TF_FLUID_GUI) window.TF_FLUID_GUI.onResize();
         if (teaser) teaser.style.opacity = on ? '0' : '1';
         if (!on && teaser) {
           setTimeout(function () { teaser.style.opacity = '0'; }, 4000);
