@@ -35,10 +35,9 @@ const canvas = document.getElementsByTagName('canvas')[0];
 resizeCanvas();
 
 // TouchFree kiosk tuning (Tim, 2026-08-03). Upstream defaults in comments.
-// NOTE: this file intentionally DIFFERS from edge/content/fluid/script.js
-// from 2026-08-03 — that page is a hand-cursor experience, this one is tuned
-// for incense-smoke behaviour from body landmarks. Only the config values
-// below differ; the simulation code itself is still upstream, untouched.
+// Tuned for incense-smoke behaviour from body landmarks; the simulation
+// code itself is still upstream, untouched. (The old hand-cursor fluid
+// page this once diverged from was deleted 2026-08-13.)
 let config = {
     SIM_RESOLUTION: 256,        // upstream 128
     DYE_RESOLUTION: 1024,       // "quality: high"

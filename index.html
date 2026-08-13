@@ -85,10 +85,14 @@
             }
 
             /* 33 landmark checkboxes make the panel tall: scroll inside
-               the panel, not the page. */
+               the panel, not the page. !important on purpose — dat.gui
+               writes an INLINE max-height it measured while the panel was
+               display:none (zero), which clipped the last rows; a
+               stylesheet !important outranks an inline style, so its
+               broken measurement can never win. */
             .dg.main > ul {
-                max-height: calc(100vh - 16vmin);
-                overflow-y: auto;
+                max-height: calc(100vh - 20vmin) !important;
+                overflow-y: auto !important;
             }
 
             .dg.main > ul::-webkit-scrollbar {
