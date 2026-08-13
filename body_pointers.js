@@ -81,6 +81,7 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
   ];
   var lmParams = null;        // idx -> {hue, force, dye} from the config
   var enabled = null;         // name -> bool; the panel's checkboxes toggle this
+  var loadedDocs = {};        // the config's about/_doc prose, kept across a save
 
   // The active pointer list, rebuilt whenever a checkbox changes. A landmark
   // the config never described paints with neutral bench defaults (hue
@@ -111,6 +112,98 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
     for (var i = 0; i < LANDMARK_NAMES.length; i++) {
       folder.add(enabled, LANDMARK_NAMES[i]).onChange(rebuildTracked);
     }
+  }
+
+  // SAVING SETTINGS. The panel edits live values; this turns them back into
+  // fluid_config.json content, so a tuning session survives a reload and the
+  // file stays the single source of truth — nothing hides in browser
+  // storage. Two paths: Save posts to the TouchFree server, which rewrites
+  // the page's own fluid_config.json; Copy puts the same JSON on the
+  // clipboard for a static host with no server behind it.
+  var SAVED_SIM_KEYS = [
+    'DYE_RESOLUTION', 'SIM_RESOLUTION', 'GRAVITY', 'CURL', 'SPLAT_RADIUS',
+    'SPLAT_FORCE', 'PRESSURE', 'DENSITY_DISSIPATION', 'VELOCITY_DISSIPATION',
+    'SHADING', 'COLORFUL', 'BLOOM', 'BLOOM_INTENSITY', 'BLOOM_THRESHOLD',
+    'SUNRAYS', 'SUNRAYS_WEIGHT', 'BACK_COLOR', 'TRANSPARENT',
+  ];
+
+  function r3(v) { return Math.round(v * 1000) / 1000; }
+
+  function currentConfig() {
+    var out = {};
+    if (loadedDocs.about) out.about = loadedDocs.about;
+    if (loadedDocs.landmarks_doc) out.landmarks_doc = loadedDocs.landmarks_doc;
+    out.landmarks = TRACKED.map(function (t) {
+      return { index: t.idx, name: t.name,
+               hue: r3(t.hue), force: r3(t.force), dye: r3(t.dye) };
+    });
+    if (loadedDocs.particles_doc) out.particles_doc = loadedDocs.particles_doc;
+    out.particles = {
+      splat_velocity: SPLAT_VELOCITY, sub_splats: SUB_SPLATS, jitter: JITTER,
+      dye_brightness: DYE_BRIGHTNESS, emit_mode: EMIT_MODE,
+      ring_count: RING_COUNT, ring_radius: RING_RADIUS,
+      ring_outward: RING_OUTWARD, ring_spin: RING_SPIN,
+      max_step: MAX_STEP, smoothing: SMOOTHING, idle_ms: IDLE_MS,
+      min_visibility: MIN_VISIBILITY,
+    };
+    if (loadedDocs.simulation_doc) out.simulation_doc = loadedDocs.simulation_doc;
+    var live = window.TF_FLUID_CONFIG;
+    out.simulation = {};
+    for (var i = 0; i < SAVED_SIM_KEYS.length; i++) {
+      var k = SAVED_SIM_KEYS[i];
+      out.simulation[k] = typeof live[k] === 'number' ? r3(live[k]) : live[k];
+    }
+    return out;
+  }
+
+  // The page's own folder name under /user/Content/, from its URL. A static
+  // host (the public repo served raw) has no such path — then only Copy works.
+  function contentPageName() {
+    var m = location.pathname.match(/\/user\/Content\/([^/]+)\//);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+
+  function note(msg) {
+    var teaser = document.getElementById('guiTeaser');
+    if (!teaser) return;
+    teaser.textContent = msg;
+    teaser.style.opacity = '1';
+    setTimeout(function () { teaser.style.opacity = '0'; }, 5000);
+  }
+
+  function saveConfig() {
+    var page = contentPageName();
+    if (!page) {
+      note('No TouchFree server here — use "copy settings" and paste into fluid_config.json');
+      return;
+    }
+    fetch('/api/kiosk/content-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page: page, file: 'fluid_config.json',
+                             config: currentConfig() }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        note(d.ok ? 'Saved — these settings now load with the page'
+                  : 'Save failed: ' + (d.error || 'unknown'));
+      })
+      .catch(function (e) { note('Save failed: ' + e); });
+  }
+
+  function copyConfig() {
+    var text = JSON.stringify(currentConfig(), null, 2) + '\n';
+    navigator.clipboard.writeText(text)
+      .then(function () { note('Settings copied — paste into fluid_config.json'); })
+      .catch(function (e) { note('Copy failed: ' + e); });
+  }
+
+  var settingsRowsBuilt = false;
+  function buildSettingsRows(gui) {
+    if (settingsRowsBuilt) return;
+    settingsRowsBuilt = true;
+    gui.add({ fun: saveConfig }, 'fun').name('save settings');
+    gui.add({ fun: copyConfig }, 'fun').name('copy settings');
   }
 
   function fail(msg) {
@@ -178,6 +271,21 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
       }
       live[key] = sim[key];
     }
+    // A saved config can carry keys the sim bakes at startup: the shader
+    // keyword set (SHADING/BLOOM/SUNRAYS) and the two resolutions. Rebuild
+    // both now so those keys actually take effect — without this a saved
+    // resolution would sit in the config doing nothing, silently.
+    window.updateKeywords();
+    if ('DYE_RESOLUTION' in sim || 'SIM_RESOLUTION' in sim) {
+      window.initFramebuffers();
+    }
+
+    // Keep the file's prose (about/_doc fields) so a save from the panel
+    // rewrites the numbers without erasing the documentation.
+    loadedDocs = {};
+    for (var dk in cfg) {
+      if (dk === 'about' || /_doc$/.test(dk)) loadedDocs[dk] = cfg[dk];
+    }
 
     rebuildTracked();   // arms the tick loop, from the enabled set
 
@@ -195,6 +303,7 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
       };
       refresh(gui);
       buildLandmarkFolder(gui);
+      buildSettingsRows(gui);
     }
     return true;
   }

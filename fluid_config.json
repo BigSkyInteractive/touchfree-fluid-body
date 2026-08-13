@@ -31,7 +31,7 @@
     "min_visibility": 0.5
   },
 
-  "simulation_doc": "Applied onto the simulation's live config after it boots; only per-frame-safe dials belong here (resolutions are baked at startup and stay in script.js). gravity is a TouchFree addition: positive rises like smoke, negative falls like water, 0 is upstream. curl = vorticity, what makes smoke curl. splat_radius small = fine wisps. density_dissipation = how fast colour fades. velocity_dissipation = how fast motion dies (low = keeps drifting). bloom_intensity high washes the scene to white.",
+  "simulation_doc": "Applied onto the simulation's live config after it boots. DYE_RESOLUTION / SIM_RESOLUTION are allowed too: the loader rebuilds the framebuffers when either is present. The panel's 'save settings' button rewrites this whole file from the live values (copy settings does the same to the clipboard for a static host). gravity is a TouchFree addition: positive rises like smoke, negative falls like water, 0 is upstream. curl = vorticity, what makes smoke curl. splat_radius small = fine wisps. density_dissipation = how fast colour fades. velocity_dissipation = how fast motion dies (low = keeps drifting). bloom_intensity high washes the scene to white.",
   "simulation": {
     "GRAVITY": 7.0,
     "CURL": 34,

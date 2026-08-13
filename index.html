@@ -36,10 +36,6 @@
                 height: 100%;
             }
 
-            .dg {
-                opacity: 0.9;
-            }
-
             /* TouchFree: the dat.GUI settings panel is hidden by default —
                kiosk pages carry no visible controls — and toggled with the
                G key (handled in body_pointers.js). dat.gui itself stays
@@ -50,6 +46,158 @@
 
             body.tf-gui .dg.ac {
                 display: block !important;
+            }
+
+            /* TouchFree panel theme. dat.gui ships its own embedded
+               stylesheet, so these overrides carry !important where its
+               rules do. Same palette as the page's hints: blue-grey on
+               dark glass. */
+            .dg {
+                opacity: 1;
+                font: 11px "Segoe UI", system-ui, sans-serif !important;
+                color-scheme: dark; /* native select/checkbox render dark */
+                text-shadow: none !important;
+            }
+
+            .dg.a {
+                margin-right: 2vmin !important;
+                margin-top: 2vmin;
+            }
+
+            .dg.main {
+                background: rgba(10, 16, 24, 0.78);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(180, 210, 235, 0.14);
+                border-radius: 10px;
+                overflow: hidden;
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+            }
+
+            .dg.main::before {
+                content: "Fluid settings";
+                display: block;
+                padding: 10px 12px 8px;
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.22em;
+                color: rgba(180, 210, 235, 0.55);
+                border-bottom: 1px solid rgba(180, 210, 235, 0.10);
+            }
+
+            /* 33 landmark checkboxes make the panel tall: scroll inside
+               the panel, not the page. */
+            .dg.main > ul {
+                max-height: calc(100vh - 16vmin);
+                overflow-y: auto;
+            }
+
+            .dg.main > ul::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .dg.main > ul::-webkit-scrollbar-thumb {
+                background: rgba(180, 210, 235, 0.20);
+                border-radius: 3px;
+            }
+
+            .dg.main > ul::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .dg li:not(.folder) {
+                background: transparent;
+                border-bottom: 1px solid rgba(180, 210, 235, 0.05);
+                transition: background-color 120ms ease;
+            }
+
+            .dg li:not(.folder):hover {
+                background: rgba(180, 210, 235, 0.05);
+            }
+
+            .dg li.title {
+                /* background-COLOR only: the shorthand would erase the
+                   data-URI arrow that marks a folder open or closed. */
+                background-color: rgba(180, 210, 235, 0.08) !important;
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+                font-size: 10px;
+                color: rgba(200, 222, 240, 0.85);
+            }
+
+            /* dat.gui's signature: colour-coded left borders per row type.
+               Removing them is most of what makes it stop looking like the
+               stock demo. */
+            .dg .cr.function,
+            .dg .cr.number,
+            .dg .cr.boolean,
+            .dg .cr.string,
+            .dg .cr.color {
+                border-left: none !important;
+            }
+
+            .dg .property-name {
+                color: rgba(180, 210, 235, 0.72);
+            }
+
+            .dg .c input[type=text] {
+                background: rgba(180, 210, 235, 0.08);
+                color: #9fd0ff;
+                border-radius: 4px;
+            }
+
+            .dg .c input[type=text]:hover,
+            .dg .c input[type=text]:focus {
+                background: rgba(180, 210, 235, 0.14);
+                color: #c4e2ff;
+            }
+
+            .dg .c select {
+                background: #101a26;
+                color: #9fd0ff;
+                border: 1px solid rgba(180, 210, 235, 0.18);
+                border-radius: 4px;
+            }
+
+            .dg .slider {
+                background: rgba(180, 210, 235, 0.10) !important;
+                border-radius: 3px;
+            }
+
+            .dg .slider:hover {
+                background: rgba(180, 210, 235, 0.16) !important;
+            }
+
+            .dg .slider-fg {
+                background: linear-gradient(90deg,
+                    rgba(90, 160, 230, 0.90), rgba(140, 205, 255, 0.95)) !important;
+                border-radius: 3px;
+            }
+
+            .dg input[type=checkbox] {
+                accent-color: #7cc0ff;
+            }
+
+            /* Function rows (save settings, copy settings) read as buttons. */
+            .dg .cr.function .property-name {
+                color: #9fd0ff;
+                width: 100%;
+            }
+
+            .dg .cr.function:hover {
+                background: rgba(120, 190, 255, 0.10);
+            }
+
+            .dg .close-button {
+                background-color: rgba(180, 210, 235, 0.06) !important;
+                color: rgba(180, 210, 235, 0.60);
+                text-transform: uppercase;
+                letter-spacing: 0.15em;
+                font-size: 9px;
+                border-top: 1px solid rgba(180, 210, 235, 0.10);
+            }
+
+            .dg .close-button:hover {
+                background-color: rgba(180, 210, 235, 0.12) !important;
             }
 
             /* Teaser for the shortcut: bottom-right, fades out shortly after
