@@ -42,7 +42,6 @@ resizeCanvas();
 let config = {
     SIM_RESOLUTION: 256,        // upstream 128
     DYE_RESOLUTION: 1024,       // "quality: high"
-    CAPTURE_RESOLUTION: 512,
     DENSITY_DISSIPATION: 0.7,   // was 1 — smoke lingers instead of vanishing
     VELOCITY_DISSIPATION: 0.08, // was 0.2 — motion PERSISTS and keeps drifting
     PRESSURE: 0.2,              // upstream 0.8
@@ -60,7 +59,6 @@ let config = {
     SHADING: true,
     COLORFUL: true,
     COLOR_UPDATE_SPEED: 10,
-    PAUSED: false,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
     TRANSPARENT: false,
     BLOOM: true,
@@ -96,7 +94,6 @@ function pointerPrototype () {
 }
 
 let pointers = [];
-let splatStack = [];
 pointers.push(new pointerPrototype());
 
 const { gl, ext } = getWebGLContext(canvas);
@@ -204,8 +201,8 @@ function supportRenderTextureFormat (gl, internalFormat, format, type) {
 
 function startGUI () {
     var gui = new dat.GUI({ width: 300 });
-    gui.add(config, 'DYE_RESOLUTION', { 'high': 1024, 'medium': 512, 'low': 256, 'very low': 128 }).name('quality').onFinishChange(initFramebuffers);
-    gui.add(config, 'SIM_RESOLUTION', { '32': 32, '64': 64, '128': 128, '256': 256 }).name('sim resolution').onFinishChange(initFramebuffers);
+    gui.add(config, 'DYE_RESOLUTION', { 'ultra': 2048, 'high': 1024, 'medium': 512, 'low': 256, 'very low': 128 }).name('quality').onFinishChange(initFramebuffers);
+    gui.add(config, 'SIM_RESOLUTION', { '32': 32, '64': 64, '128': 128, '256': 256, '512': 512 }).name('sim resolution').onFinishChange(initFramebuffers);
     gui.add(config, 'DENSITY_DISSIPATION', 0, 4.0).name('density diffusion');
     gui.add(config, 'VELOCITY_DISSIPATION', 0, 4.0).name('velocity diffusion');
     gui.add(config, 'PRESSURE', 0.0, 1.0).name('pressure');
@@ -213,11 +210,6 @@ function startGUI () {
     gui.add(config, 'SPLAT_RADIUS', 0.01, 1.0).name('splat radius');
     gui.add(config, 'SHADING').name('shading').onFinishChange(updateKeywords);
     gui.add(config, 'COLORFUL').name('colorful');
-    gui.add(config, 'PAUSED').name('paused').listen();
-
-    gui.add({ fun: () => {
-        splatStack.push(parseInt(Math.random() * 20) + 5);
-    } }, 'fun').name('Random splats');
 
     let bloomFolder = gui.addFolder('Bloom');
     bloomFolder.add(config, 'BLOOM').name('enabled').onFinishChange(updateKeywords);
@@ -228,15 +220,14 @@ function startGUI () {
     sunraysFolder.add(config, 'SUNRAYS').name('enabled').onFinishChange(updateKeywords);
     sunraysFolder.add(config, 'SUNRAYS_WEIGHT', 0.3, 1.0).name('weight');
 
-    let captureFolder = gui.addFolder('Capture');
-    captureFolder.addColor(config, 'BACK_COLOR').name('background color');
-    captureFolder.add(config, 'TRANSPARENT').name('transparent');
-    captureFolder.add({ fun: captureScreenshot }, 'fun').name('take screenshot');
+    let backgroundFolder = gui.addFolder('Background');
+    backgroundFolder.addColor(config, 'BACK_COLOR').name('background color');
+    backgroundFolder.add(config, 'TRANSPARENT').name('transparent');
 
-    // TouchFree: upstream's GitHub / Twitter / Discord / mobile-app rows are
-    // removed with the rest of the promo material. The tuning controls above
-    // stay (the panel is hidden by CSS on the kiosk, but ?debug bench use
-    // keeps them worth having).
+    // TouchFree: upstream's GitHub / Twitter / Discord / mobile-app rows,
+    // the paused toggle, the Random-splats button and the screenshot
+    // capture (a browser download the kiosk window cannot accept) are
+    // removed with the rest of the promo material.
 
     if (isMobile())
         gui.close();
@@ -250,70 +241,6 @@ function startGUI () {
 
 function isMobile () {
     return /Mobi|Android/i.test(navigator.userAgent);
-}
-
-function captureScreenshot () {
-    let res = getResolution(config.CAPTURE_RESOLUTION);
-    let target = createFBO(res.width, res.height, ext.formatRGBA.internalFormat, ext.formatRGBA.format, ext.halfFloatTexType, gl.NEAREST);
-    render(target);
-
-    let texture = framebufferToTexture(target);
-    texture = normalizeTexture(texture, target.width, target.height);
-
-    let captureCanvas = textureToCanvas(texture, target.width, target.height);
-    let datauri = captureCanvas.toDataURL();
-    downloadURI('fluid.png', datauri);
-    URL.revokeObjectURL(datauri);
-}
-
-function framebufferToTexture (target) {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
-    let length = target.width * target.height * 4;
-    let texture = new Float32Array(length);
-    gl.readPixels(0, 0, target.width, target.height, gl.RGBA, gl.FLOAT, texture);
-    return texture;
-}
-
-function normalizeTexture (texture, width, height) {
-    let result = new Uint8Array(texture.length);
-    let id = 0;
-    for (let i = height - 1; i >= 0; i--) {
-        for (let j = 0; j < width; j++) {
-            let nid = i * width * 4 + j * 4;
-            result[nid + 0] = clamp01(texture[id + 0]) * 255;
-            result[nid + 1] = clamp01(texture[id + 1]) * 255;
-            result[nid + 2] = clamp01(texture[id + 2]) * 255;
-            result[nid + 3] = clamp01(texture[id + 3]) * 255;
-            id += 4;
-        }
-    }
-    return result;
-}
-
-function clamp01 (input) {
-    return Math.min(Math.max(input, 0), 1);
-}
-
-function textureToCanvas (texture, width, height) {
-    let captureCanvas = document.createElement('canvas');
-    let ctx = captureCanvas.getContext('2d');
-    captureCanvas.width = width;
-    captureCanvas.height = height;
-
-    let imageData = ctx.createImageData(width, height);
-    imageData.data.set(texture);
-    ctx.putImageData(imageData, 0, 0);
-
-    return captureCanvas;
-}
-
-function downloadURI (filename, uri) {
-    let link = document.createElement('a');
-    link.download = filename;
-    link.href = uri;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
 }
 
 class Material {
@@ -1157,8 +1084,7 @@ function update () {
         initFramebuffers();
     updateColors(dt);
     applyInputs();
-    if (!config.PAUSED)
-        step(dt);
+    step(dt);
     render(null);
     requestAnimationFrame(update);
 }
@@ -1195,9 +1121,6 @@ function updateColors (dt) {
 }
 
 function applyInputs () {
-    if (splatStack.length > 0)
-        multipleSplats(splatStack.pop());
-
     pointers.forEach(p => {
         if (p.moved) {
             p.moved = false;
@@ -1529,13 +1452,6 @@ window.addEventListener('touchend', e => {
         if (pointer == null) continue;
         updatePointerUpData(pointer);
     }
-});
-
-window.addEventListener('keydown', e => {
-    if (e.code === 'KeyP')
-        config.PAUSED = !config.PAUSED;
-    if (e.key === ' ')
-        splatStack.push(parseInt(Math.random() * 20) + 5);
 });
 
 function updatePointerDownData (pointer, id, posX, posY) {

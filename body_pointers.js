@@ -66,6 +66,53 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
   var EMIT_MODE, RING_COUNT, RING_RADIUS, RING_OUTWARD, RING_SPIN;
   var MAX_STEP, SMOOTHING, IDLE_MS;
 
+  // Every landmark on the wire, in edge/body_detector.LANDMARK_NAMES order:
+  // COCO-17 first (frozen), then MediaPipe's remaining 16. The settings
+  // panel offers ALL of them; fluid_config.json decides which start on.
+  var LANDMARK_NAMES = [
+    'nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear',
+    'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow',
+    'left_wrist', 'right_wrist', 'left_hip', 'right_hip',
+    'left_knee', 'right_knee', 'left_ankle', 'right_ankle',
+    'left_eye_inner', 'left_eye_outer', 'right_eye_inner', 'right_eye_outer',
+    'mouth_left', 'mouth_right', 'left_pinky', 'right_pinky',
+    'left_index', 'right_index', 'left_thumb', 'right_thumb',
+    'left_heel', 'right_heel', 'left_foot_index', 'right_foot_index',
+  ];
+  var lmParams = null;        // idx -> {hue, force, dye} from the config
+  var enabled = null;         // name -> bool; the panel's checkboxes toggle this
+
+  // The active pointer list, rebuilt whenever a checkbox changes. A landmark
+  // the config never described paints with neutral bench defaults (hue
+  // spread by index, moderate force, faint dye) until the JSON gives it
+  // real values. Cost note: every enabled landmark that moves costs
+  // sub_splats x 2 GL passes per frame -- all 33 on at once is a bench
+  // experiment, not a show setting.
+  function rebuildTracked() {
+    var lm = [];
+    for (var i = 0; i < LANDMARK_NAMES.length; i++) {
+      if (!enabled[LANDMARK_NAMES[i]]) {
+        delete state[i];    // a disabled pointer stops painting NOW
+        continue;
+      }
+      var p = lmParams[i] || { hue: i / LANDMARK_NAMES.length,
+                               force: 0.8, dye: 0.2 };
+      lm.push({ idx: i, name: LANDMARK_NAMES[i],
+                hue: p.hue, force: p.force, dye: p.dye });
+    }
+    TRACKED = lm;
+  }
+
+  var lmFolderBuilt = false;
+  function buildLandmarkFolder(gui) {
+    if (lmFolderBuilt) return;
+    lmFolderBuilt = true;
+    var folder = gui.addFolder('Body landmarks');
+    for (var i = 0; i < LANDMARK_NAMES.length; i++) {
+      folder.add(enabled, LANDMARK_NAMES[i]).onChange(rebuildTracked);
+    }
+  }
+
   function fail(msg) {
     console.error('[fluid_config] ' + msg);
     if (hint) {
@@ -79,7 +126,9 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
       fail('landmarks list missing or empty');
       return false;
     }
-    var lm = [];
+    lmParams = {};
+    enabled = {};
+    for (var n = 0; n < LANDMARK_NAMES.length; n++) enabled[LANDMARK_NAMES[n]] = false;
     for (var i = 0; i < cfg.landmarks.length; i++) {
       var e = cfg.landmarks[i];
       if (typeof e.index !== 'number' || typeof e.hue !== 'number'
@@ -87,8 +136,12 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
         fail('landmark ' + i + ' needs numeric index/hue/force/dye');
         return false;
       }
-      lm.push({ idx: e.index, name: e.name || String(e.index),
-                hue: e.hue, force: e.force, dye: e.dye });
+      if (e.index < 0 || e.index >= LANDMARK_NAMES.length) {
+        fail('landmark ' + i + ' index ' + e.index + ' is not on the wire');
+        return false;
+      }
+      lmParams[e.index] = { hue: e.hue, force: e.force, dye: e.dye };
+      enabled[LANDMARK_NAMES[e.index]] = true;
     }
     var p = cfg.particles;
     var need = ['splat_velocity', 'sub_splats', 'jitter', 'dye_brightness',
@@ -126,11 +179,12 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
       live[key] = sim[key];
     }
 
-    TRACKED = lm;   // assigned last: this is what arms the tick loop
+    rebuildTracked();   // arms the tick loop, from the enabled set
 
     // The settings panel reads its values at creation, before this config
     // was applied — refresh every slider so G shows the truth, not the
-    // pre-config numbers.
+    // pre-config numbers. And give the panel its Body landmarks folder,
+    // one checkbox per wire landmark.
     var gui = window.TF_FLUID_GUI;
     if (gui) {
       var refresh = function (g) {
@@ -140,6 +194,7 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
         });
       };
       refresh(gui);
+      buildLandmarkFolder(gui);
     }
     return true;
   }
