@@ -127,7 +127,40 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
     }
 
     TRACKED = lm;   // assigned last: this is what arms the tick loop
+
+    // The settings panel reads its values at creation, before this config
+    // was applied — refresh every slider so G shows the truth, not the
+    // pre-config numbers.
+    var gui = window.TF_FLUID_GUI;
+    if (gui) {
+      var refresh = function (g) {
+        (g.__controllers || []).forEach(function (c) { c.updateDisplay(); });
+        Object.keys(g.__folders || {}).forEach(function (k) {
+          refresh(g.__folders[k]);
+        });
+      };
+      refresh(gui);
+    }
     return true;
+  }
+
+  // THE SETTINGS PANEL SHORTCUT. G toggles the simulation's dat.GUI panel,
+  // hidden by default on the kiosk (index.html CSS). The teaser in the
+  // corner names the key, then gets out of the way.
+  function initGuiToggle() {
+    var teaser = document.getElementById('guiTeaser');
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'g' || e.key === 'G') {
+        var on = document.body.classList.toggle('tf-gui');
+        if (teaser) teaser.style.opacity = on ? '0' : '1';
+        if (!on && teaser) {
+          setTimeout(function () { teaser.style.opacity = '0'; }, 4000);
+        }
+      }
+    });
+    if (teaser) {
+      setTimeout(function () { teaser.style.opacity = '0'; }, 8000);
+    }
   }
 
   var state = {};             // idx -> {tx, ty, targetX, targetY, primed}
@@ -329,6 +362,7 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
 
   window.addEventListener('DOMContentLoaded', function () {
     hint = document.getElementById('bodyHint');
+    initGuiToggle();
     // Config first, strictly: nothing paints until fluid_config.json loads
     // and validates. URL parameters apply AFTER, so ?vel= bench overrides
     // win over the file.

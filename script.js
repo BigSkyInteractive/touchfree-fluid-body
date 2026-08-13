@@ -240,6 +240,12 @@ function startGUI () {
 
     if (isMobile())
         gui.close();
+
+    // TouchFree: expose the panel so body_pointers.js can refresh its
+    // sliders after fluid_config.json is applied — dat.gui reads values at
+    // creation and never re-reads them, so without this the panel shows the
+    // pre-config numbers.
+    window.TF_FLUID_GUI = gui;
 }
 
 function isMobile () {

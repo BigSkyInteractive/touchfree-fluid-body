@@ -40,11 +40,31 @@
                 opacity: 0.9;
             }
 
-            /* TouchFree: hide the dat.GUI settings panel — kiosk pages carry
-               no visible controls. dat.gui itself stays loaded so script.js's
-               startGUI() still runs unchanged. */
+            /* TouchFree: the dat.GUI settings panel is hidden by default —
+               kiosk pages carry no visible controls — and toggled with the
+               G key (handled in body_pointers.js). dat.gui itself stays
+               loaded so script.js's startGUI() runs unchanged. */
             .dg.ac {
                 display: none !important;
+            }
+
+            body.tf-gui .dg.ac {
+                display: block !important;
+            }
+
+            /* Teaser for the shortcut: bottom-right, fades out shortly after
+               load. Pointer-events none — it is a hint, not a control. */
+            #guiTeaser {
+                position: fixed;
+                right: 2vmin;
+                bottom: 2vmin;
+                pointer-events: none;
+                font-family: "Segoe UI", system-ui, sans-serif;
+                font-size: 1.6vmin;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: rgba(180, 210, 235, 0.45);
+                transition: opacity 900ms ease;
             }
 
             /* Prompt shown until a body is tracked. Fades out the moment the
@@ -72,6 +92,7 @@
              splat()/generateColor()/HSVtoRGB() declarations exist. Upstream
              script.js carries only deletions of its promo material. -->
         <div id="bodyHint">Step into view &mdash; move your arms to stir the fluid</div>
+        <div id="guiTeaser">Press G &mdash; fluid settings</div>
 
         <script src="./script.js"></script>
         <script src="./body_pointers.js"></script>
