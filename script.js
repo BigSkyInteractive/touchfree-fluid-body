@@ -200,15 +200,19 @@ function supportRenderTextureFormat (gl, internalFormat, format, type) {
 
 function startGUI () {
     var gui = new dat.GUI({ width: 300 });
-    gui.add(config, 'DYE_RESOLUTION', { '4k': 2160, 'high': 1024, 'medium': 512, 'low': 256, 'very low': 128 }).name('quality').onFinishChange(initFramebuffers);
-    gui.add(config, 'SIM_RESOLUTION', { '32': 32, '64': 64, '128': 128, '256': 256, '512': 512 }).name('sim resolution').onFinishChange(initFramebuffers);
-    gui.add(config, 'DENSITY_DISSIPATION', 0, 4.0).name('density diffusion');
-    gui.add(config, 'VELOCITY_DISSIPATION', 0, 4.0).name('velocity diffusion');
-    gui.add(config, 'PRESSURE', 0.0, 1.0).name('pressure');
-    gui.add(config, 'CURL', 0, 50).name('vorticity').step(1);
-    gui.add(config, 'SPLAT_RADIUS', 0.01, 1.0).name('splat radius');
-    gui.add(config, 'SHADING').name('shading').onFinishChange(updateKeywords);
-    gui.add(config, 'COLORFUL').name('colorful');
+    // TouchFree: the loose top-level dials live in their own expandable
+    // folder like every other section, so the panel opens as a short list
+    // of headings.
+    let fluidFolder = gui.addFolder('Fluid');
+    fluidFolder.add(config, 'DYE_RESOLUTION', { '4k': 2160, 'high': 1024, 'medium': 512, 'low': 256, 'very low': 128 }).name('quality').onFinishChange(initFramebuffers);
+    fluidFolder.add(config, 'SIM_RESOLUTION', { '32': 32, '64': 64, '128': 128, '256': 256, '512': 512 }).name('sim resolution').onFinishChange(initFramebuffers);
+    fluidFolder.add(config, 'DENSITY_DISSIPATION', 0, 4.0).name('density diffusion');
+    fluidFolder.add(config, 'VELOCITY_DISSIPATION', 0, 4.0).name('velocity diffusion');
+    fluidFolder.add(config, 'PRESSURE', 0.0, 1.0).name('pressure');
+    fluidFolder.add(config, 'CURL', 0, 50).name('vorticity').step(1);
+    fluidFolder.add(config, 'SPLAT_RADIUS', 0.01, 1.0).name('splat radius');
+    fluidFolder.add(config, 'SHADING').name('shading').onFinishChange(updateKeywords);
+    fluidFolder.add(config, 'COLORFUL').name('colorful');
 
     let bloomFolder = gui.addFolder('Bloom');
     bloomFolder.add(config, 'BLOOM').name('enabled').onFinishChange(updateKeywords);

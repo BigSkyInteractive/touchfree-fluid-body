@@ -216,14 +216,28 @@
                 accent-color: #7cc0ff;
             }
 
-            /* Function rows (save settings, copy settings) read as buttons. */
-            .dg .cr.function .property-name {
-                color: #9fd0ff;
-                width: 100%;
+            /* The Save button: pinned under the list, centered, green. */
+            .dg .tf-save {
+                display: block;
+                margin: 12px auto;
+                padding: 10px 44px;
+                border: none;
+                border-radius: 6px;
+                background: linear-gradient(180deg, #34b45c, #239347);
+                color: #eafff1;
+                font: 700 13px "Segoe UI", system-ui, sans-serif;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                cursor: pointer;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
             }
 
-            .dg .cr.function:hover {
-                background: rgba(120, 190, 255, 0.10);
+            .dg .tf-save:hover {
+                background: linear-gradient(180deg, #3cc968, #2aa552);
+            }
+
+            .dg .tf-save:active {
+                transform: translateY(1px);
             }
 
             .dg .close-button {

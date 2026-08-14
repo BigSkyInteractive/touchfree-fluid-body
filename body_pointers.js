@@ -174,7 +174,7 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
   function saveConfig() {
     var page = contentPageName();
     if (!page) {
-      note('No TouchFree server here — use "copy settings" and paste into fluid_config.json');
+      note('Save needs the TouchFree app behind the page — edit fluid_config.json directly here');
       return;
     }
     fetch('/api/kiosk/content-config', {
@@ -191,19 +191,18 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
       .catch(function (e) { note('Save failed: ' + e); });
   }
 
-  function copyConfig() {
-    var text = JSON.stringify(currentConfig(), null, 2) + '\n';
-    navigator.clipboard.writeText(text)
-      .then(function () { note('Settings copied — paste into fluid_config.json'); })
-      .catch(function (e) { note('Copy failed: ' + e); });
-  }
-
-  var settingsRowsBuilt = false;
-  function buildSettingsRows(gui) {
-    if (settingsRowsBuilt) return;
-    settingsRowsBuilt = true;
-    gui.add({ fun: saveConfig }, 'fun').name('save settings');
-    gui.add({ fun: copyConfig }, 'fun').name('copy settings');
+  // The Save button is a real button pinned at the panel's bottom, outside
+  // the scrolling list, so it is always in reach.
+  var saveBtnBuilt = false;
+  function buildSaveButton(gui) {
+    if (saveBtnBuilt) return;
+    saveBtnBuilt = true;
+    var btn = document.createElement('button');
+    btn.className = 'tf-save';
+    btn.type = 'button';
+    btn.textContent = 'Save';
+    btn.addEventListener('click', saveConfig);
+    gui.domElement.insertBefore(btn, gui.domElement.querySelector('.close-button'));
   }
 
   function fail(msg) {
@@ -303,7 +302,7 @@ Data contract (see docs/v5/V5_UI_PROTOCOL.md):
       };
       refresh(gui);
       buildLandmarkFolder(gui);
-      buildSettingsRows(gui);
+      buildSaveButton(gui);
       gui.onResize();   // the rows above changed the panel's height
     }
     return true;
