@@ -98,6 +98,19 @@ has the translation module, the full contract, and a complete demo. (Avatar
 software that speaks the standard VMC protocol can instead receive the same
 bones over OSC/UDP directly from TouchFree.)
 
+### 4. Face expression dials — optional, when the operator turns them on
+
+```
+payload.face.blendshapes   { "eyeBlinkLeft": 0..1, "jawOpen": 0..1, ... }
+```
+
+52 named dials in the **ARKit blendshape standard vocabulary** — blinks,
+jaw, mouth shapes, brows, cheeks, eye gaze — measured live from the
+person's face. The `face` key is **absent** (not null) whenever face
+tracking is off or nothing was measured this cycle, so guard for it and
+ease your art back to neutral on your own timing. Any consumer that
+already speaks ARKit blendshape names maps these directly.
+
 This fluid page uses layer 1 only. A natural upgrade — stronger splats when
 a hand drives toward the screen — is layer 2's `z`, and it is already
 arriving in every message.
