@@ -142,9 +142,11 @@ view" until a body is tracked.
 
 ## Also from TouchFree
 
-Driving **rigged 3D characters** (Mixamo, VRM, VMC protocol) instead of 2D
-effects: see
-[touchfree-receiver-kit](https://github.com/BigSkyInteractive/touchfree-receiver-kit).
+- [touchfree-receiver-kit](https://github.com/BigSkyInteractive/touchfree-receiver-kit)
+  — driving **rigged 3D characters** (Mixamo, VRM, VMC protocol)
+- [touchfree-puppet-2d](https://github.com/BigSkyInteractive/touchfree-puppet-2d)
+  — a **flat cartoon puppet** that copies the person, Character
+  Animator-style, from the same stream
 
 ## Keywords
 
